@@ -1,0 +1,8 @@
+# Compassionate Vendor - Unified Dependencies
+opencv-python
+mediapipe
+ultralytics
+flask
+flask-cors
+numpy
+winsound; sys_platform == 'win32'

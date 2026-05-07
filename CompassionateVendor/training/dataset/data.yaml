@@ -1,0 +1,14 @@
+names:
+- Fruits
+- Softdrink
+- Chips_Packet
+- Salad
+- Sandwich
+- Pizza
+- Burger
+- Milk_Shake
+- Fruit_Salad
+nc: 9
+path: C:\Users\DELL\OneDrive\Desktop\fruit_project\fruit_project\dataset
+train: images/train
+val: images/val

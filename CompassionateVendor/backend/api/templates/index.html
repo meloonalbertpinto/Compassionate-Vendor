@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Smart Store</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+.fade { animation: fade 0.5s ease-in-out; }
+@keyframes fade { from {opacity:0} to {opacity:1} }
+.glow { box-shadow: 0 0 20px rgba(0,255,255,0.5); }
+</style>
+</head>
+
+<body class="bg-black text-white">
+
+<!-- WELCOME -->
+<div id="welcome" class="h-screen flex flex-col justify-center items-center text-center fade">
+    <h1 class="text-5xl font-bold mb-4">Smart Store</h1>
+    <p class="text-gray-400 mb-6">Pick items and walk away</p>
+    <button onclick="startShopping()" class="px-6 py-3 bg-cyan-400 text-black rounded-xl">Start Shopping</button>
+</div>
+
+<!-- CART -->
+<div id="cart" class="hidden p-10 fade">
+
+    <h2 class="text-3xl mb-6">🛒 Your Cart</h2>
+
+    <div id="items" class="space-y-3"></div>
+
+    <div class="mt-6 text-xl">
+        Total Items: <span id="totalItems">0</span>
+    </div>
+
+    <div class="mt-6 w-full bg-gray-800 h-3 rounded">
+        <div id="timerBar" class="h-3 bg-cyan-400 rounded"></div>
+    </div>
+
+    <!-- ✅ NEW BUTTON -->
+    <button onclick="payNow()" 
+    class="mt-6 px-6 py-3 bg-green-400 text-black rounded-xl hover:scale-105 transition">
+        ✅ Pay Now
+    </button>
+
+</div>
+
+<!-- PAYMENT -->
+<div id="payment" class="hidden h-screen flex flex-col justify-center items-center">
+    <h2 class="text-3xl mb-4">Processing Payment...</h2>
+    <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-cyan-400"></div>
+</div>
+
+<!-- SUCCESS -->
+<div id="success" class="hidden h-screen flex flex-col justify-center items-center text-green-400">
+    <h1 class="text-4xl mb-2">✔ Payment Successful</h1>
+    <p>Thank you for shopping!</p>
+</div>
+
+<!-- FAILURE -->
+<div id="failure" class="hidden h-screen flex flex-col justify-center items-center text-red-500">
+    <h1 class="text-4xl mb-2">❌ Payment Failed</h1>
+    <button onclick="resetSystem()" class="mt-4 px-4 py-2 bg-red-500 rounded">Retry</button>
+</div>
+
+<script>
+let lastItems = 0;
+
+function showScreen(id) {
+    ["welcome","cart","payment","success","failure"].forEach(s => {
+        document.getElementById(s).classList.add("hidden");
+    });
+    document.getElementById(id).classList.remove("hidden");
+}
+
+function startShopping() {
+    showScreen("cart");
+}
+
+function resetSystem() {
+    lastItems = 0;
+    document.getElementById("items").innerHTML = "";
+    showScreen("welcome");
+}
+
+// ✅ NEW FUNCTION
+async function payNow() {
+    try {
+        await fetch("/pay", { method: "POST" });
+
+        showScreen("payment");
+
+        setTimeout(() => {
+            showScreen("success");
+            setTimeout(resetSystem, 4000);
+        }, 2000);
+
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+async function fetchData() {
+    try {
+        const res = await fetch("/data");
+        const data = await res.json();
+
+        if (data.items > lastItems) {
+            addItemUI();
+            lastItems = data.items;
+        }
+
+        document.getElementById("totalItems").innerText = data.items;
+
+        if (data.status === "PAYMENT_PENDING") {
+            showScreen("cart");
+            document.getElementById("timerBar").style.width =
+                (data.timer * 10) + "%";
+        }
+
+        if (data.status === "THEFT") {
+            showScreen("payment");
+            setTimeout(() => showScreen("failure"), 2000);
+        }
+
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+function addItemUI() {
+    const div = document.createElement("div");
+
+    div.className = "flex justify-between bg-gray-900 p-4 rounded-xl glow fade";
+
+    div.innerHTML = `
+        <span>Item Added</span>
+        <span class="text-green-400">+1</span>
+    `;
+
+    document.getElementById("items").appendChild(div);
+}
+
+setInterval(fetchData, 500);
+setTimeout(startShopping, 4000);
+
+</script>
+
+</body>
+</html> 
